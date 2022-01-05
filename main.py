@@ -119,7 +119,7 @@ def info():
     本软件由紫火开发，遵守GPLv3开源协议
     本软件使用Python3开发
     本软件使用TKinter Windnd等第三方包
-    本软件开源地址:xxxxxx
+    本软件开源地址:https://github.com/magician333/drfx_zip-unzip
     使用本软件有任何问题请联系magician33333@163.com
     """.format(version)
     tkinter.messagebox.showinfo("关于", text)
