@@ -28,13 +28,17 @@ def Build_Drfx(ft,csort):
     os.makedirs(temp_file_path)
     for i in filepath:
         shutil.copy(i,temp_file_path)
-
     with zipfile.ZipFile(output_filename, "w") as f:
         for i in os.walk(".\\Edit"):
             for n in i[2]:
                 f.write("".join((i[0], "\\", n)))
-    shutil.move(output_filename,spath)
-    return output_filename
+    try:
+        shutil.move(output_filename,spath)
+        return output_filename
+    except:
+        Del_dir("Edit")
+        tkinter.messagebox.showerror("错误", "文件已存在")
+    
 
 def Unpack_Drfx(drp):
     # dfp : drfx file path
