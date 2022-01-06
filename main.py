@@ -171,7 +171,7 @@ if __name__ == "__main__":
     show_path = StringVar()
     tk.title("Drfx打包/解包工具 ")
     tk.iconbitmap("icon.ico")
-    tk.geometry("280x140")
+    # tk.geometry("280x140")
 
     menu = Menu(tk)
     tk["menu"] = menu
@@ -182,26 +182,36 @@ if __name__ == "__main__":
     menu.add_cascade(label="致谢",command=thanks)
     menu.add_cascade(label="关于",command=info)
 
-    #l for Label e for Entry b for Button c for Combobox p for PhotoImage
-    l_filepath = Label(tk, text="文件位置")
-    e_filepath = Entry(tk,state="readonly",textvariable=show_path)
+    #f for LabelFrame e for Entry b for Button c for Combobox p for PhotoImage
+    p_content = ttk.PanedWindow(tk,orient="vertical")
+    
+    f_filepath =LabelFrame(p_content,labelanchor="nw",text="文件位置",width=200)
+    e_filepath = Entry(f_filepath,state="readonly",textvariable=show_path)
     p_buttonimage = PhotoImage(file="file-72-16.png")
-    b_selectfile = Button(tk,command=select_files,image=p_buttonimage)
+    b_selectfile = Button(f_filepath,command=select_files,image=p_buttonimage)
     windnd.hook_dropfiles(tk, func=drag_files)
-    l_fusiontype = Label(tk, text="文件类型")
-    c_choose_fusiontype = ttk.Combobox(tk, values=(
+    f_fusiontype = LabelFrame(p_content, text="Fusion类型",width=200)
+    c_choose_fusiontype = ttk.Combobox(f_fusiontype, values=(
         "Effects", "Generators", "Titles", "Transitions"),state="readonly")
     c_choose_fusiontype.current(0)
-    l_customdir = Label(tk,text="自定义目录")
-    e_get_customdir = Entry(tk)
-    b_run = Button(tk, text="打包/解包", command=run)
+    f_customdir = LabelFrame(p_content,text="自定义目录",height=200,width=200)
+    e_get_customdir = Entry(f_customdir)
+    r_remember = Checkbutton(f_customdir,text="记住",state="disable")
+    b_run = Button(p_content, text="打包/解包", command=run)
 
-    l_filepath.grid(row=0,column=0,padx=5,pady=3,sticky="nw")
-    e_filepath.grid(row=0,column=1,columnspan=10,padx=5,pady=3,sticky="nw")
-    b_selectfile.grid(row=0,column=2,padx=5,pady=3)
-    l_fusiontype.grid(row=1,column=0,padx=5,pady=3,sticky="nw")
-    c_choose_fusiontype.grid(row=1,column=1,padx=5,pady=3,sticky="nw")
-    l_customdir.grid(row=2,column=0,padx=5,pady=3,sticky="nw")
-    e_get_customdir.grid(row=2,column=1,padx=5,pady=3,sticky="nw")
-    b_run.grid(row=3,columnspan=3,sticky="n")
+    p_content.add(f_filepath,weight=50)
+    p_content.add(f_fusiontype,weight=50)
+    p_content.add(f_customdir,weight=50)
+
+    p_content.pack(side="top",expand=True,fill="both")
+    f_filepath.pack(side="top",anchor="nw",padx=20,pady=5,ipadx=5,ipady=5)
+    e_filepath.pack(side="left",anchor="nw",expand="no",padx=20)
+    b_selectfile.pack(side="left",anchor="n",padx=10)
+    f_fusiontype.pack(side="top",anchor="nw",padx=20,pady=5,ipadx=5,ipady=5)
+    c_choose_fusiontype.pack(side="left",anchor="nw",padx=20)
+    f_customdir.pack(side="top",anchor="nw",padx=20,pady=5,ipadx=5,ipady=5)
+    e_get_customdir.pack(side="left",anchor="n",padx=10)
+    r_remember.pack(side="right",anchor="ne")
+    b_run.pack(side="bottom",pady=15)
+
     tk.mainloop()
