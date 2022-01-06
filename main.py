@@ -1,5 +1,4 @@
 # encoding : uft-8
-
 import windnd
 import os
 import sys
@@ -8,22 +7,16 @@ import shutil
 import zipfile
 import tkinter.filedialog
 import tkinter.messagebox
-
 from platform import version
 from tkinter import *
 from tkinter import ttk
 
 
-tk = Tk()
-filepath = None
-version = "V20220105.004"
-show_path = StringVar()
-
 def Build_Drfx(ft,csort):
-    # sfp : setting file path
     # ft : file_type "Effects","Generators","Titles","Transitions"
+    # csort : custom sort
     temp_file_path = ".\\Edit\\"+ft+"\\"+csort
-    output_filename = (filepath[0].split("\\")[-1]).split(".")[0]+".drfx"
+    output_filename = os.path.split(filepath[0])[-1].split(".")[0]+".drfx"
     spath = os.path.dirname(filepath[0])
     os.makedirs(temp_file_path)
     for i in filepath:
@@ -34,57 +27,95 @@ def Build_Drfx(ft,csort):
                 f.write("".join((i[0], "\\", n)))
     try:
         shutil.move(output_filename,spath)
-        return output_filename
     except:
-        Del_dir("Edit")
-        tkinter.messagebox.showerror("错误", "文件已存在")
+        pass
+
+    Del_dir("Edit")
+    return output_filename
     
 
-def Unpack_Drfx(drp):
+def Unpack_Drfx():
     # dfp : drfx file path
-    temp_path = os.path.dirname(drp)+"\\"+drp.split("\\")[-1].split(".")[0]
-    with zipfile.ZipFile(drp,"r") as f:
-        f.extractall(temp_path)
+    for i in filepath:
+        temp_path = os.path.dirname(i)+"\\"+i.split("\\")[-1].split(".")[0]
+        with zipfile.ZipFile(i,"r") as f:
+            f.extractall(temp_path)
     return temp_path
 
 def Del_dir(dir_name):
     if os.path.exists(dir_name):
-        shutil.rmtree(dir_name)
+        try:
+            shutil.rmtree(dir_name)
+        except:
+            pass
 
 def select_files():
     # select setting files
     global filepath
     temp_list = []
     filepath = tkinter.filedialog.askopenfiles(
-        filetypes=[("setting文件", "*.setting *.png"),("drfx文件","*.drfx")], title="请选择setting文件或drfx文件")
+        filetypes=[("setting文件", "*.setting *.png"),("drfx文件","*.drfx")], title="请选择文件")
     for i in filepath:
         temp_list.append(i.name)
     filepath = temp_list
+    cfile()
     show_path.set(filepath)
     
 def drag_files(files):
     global filepath
     temp_list = []
     for i in files:
-        temp_list.append(i.decode("gbk"))
-    filepath = temp_list
-    show_path.set(filepath) 
+        path = i.decode("gbk")
+        if path.split(".")[-1] not in ["setting","png","drfx"]:
+            temp_list = []
+            tkinter.messagebox.showerror("错误",str(path)+"不被支持")
+            break
+        else:
+            temp_list.append(path)
+            filepath = temp_list
+            cfile()
+            show_path.set(filepath) 
+
+def ccsort(csort):
+    # check custom sort
+    forbid_text = [":","*","\"","<",">","|","？"]
+    for i in forbid_text:
+        if i in csort:
+            return True
+    return False
+
+def cfile():
+    # check files
+    temp = []
+    if filepath != []:
+        for i in filepath:
+            if i.split(".")[-1] == "drfx":
+                temp.append(True)
+            else:
+                temp.append(False)
+        #if all of temp is True(all files is drfx) return unzip
+        if all(temp):
+            b_run["text"] = "解包"
+            return True
+        else:
+            b_run["text"] = "打包"
+            return False
 
 def run():
+    filename = ""
     Del_dir("Edit")
-    for i in filepath:
-        if i.split(".")[-1] == "drfx":
-            filename = Unpack_Drfx(i)
-            tkinter.messagebox.showinfo("提示", "已解包到"+filename)
+    if filepath is None or len(filepath) == 0:
+        tkinter.messagebox.showerror("错误","未选择文件")
+    elif ccsort(e_get_customdir.get()):
+        tkinter.messagebox.showerror("错误","自定义目录不能使用: * \" < > | ？等字符")
+    else:
+        if cfile():
+            filename = Unpack_Drfx()
+            tkinter.messagebox.showinfo("提示", "已解包到"+str(filename))
         else:
-            if i is None:
-                tkinter.messagebox.showerror("错误", "请选择setting文件")
-            elif c_choose_fusiontype.get() == "":
-                tkinter.messagebox.showerror("错误", "请选择文件类型")
-            else:
-                filename = Build_Drfx(c_choose_fusiontype.get(),e_get_customdir.get())
-                Del_dir("Edit")
-                tkinter.messagebox.showinfo("提示", "已生成"+filename)       
+            filename = Build_Drfx(c_choose_fusiontype.get(),e_get_customdir.get())
+            Del_dir("Edit")
+            tkinter.messagebox.showinfo("提示", "已生成"+str(filename))
 
 ################################################################################
 
@@ -133,39 +164,44 @@ def close():
 
 ################################################################################
 
-tk.title("Drfx打包/解包工具 ")
-tk.iconbitmap("icon.ico")
-tk.geometry("280x140")
+if __name__ == "__main__":
+    tk = Tk()
+    filepath = None
+    version = "V20220106.03"
+    show_path = StringVar()
+    tk.title("Drfx打包/解包工具 ")
+    tk.iconbitmap("icon.ico")
+    tk.geometry("280x140")
 
-menu = Menu(tk)
-tk["menu"] = menu
-menubar1 = Menu(menu)
-menubar1.add_command(label="退出",command=close)
-menu.add_cascade(label="文件",menu=menubar1)
-menu.add_cascade(label="帮助",command=get_help)
-menu.add_cascade(label="致谢",command=thanks)
-menu.add_cascade(label="关于",command=info)
+    menu = Menu(tk)
+    tk["menu"] = menu
+    menubar1 = Menu(menu)
+    menubar1.add_command(label="退出",command=close)
+    menu.add_cascade(label="文件",menu=menubar1)
+    menu.add_cascade(label="帮助",command=get_help)
+    menu.add_cascade(label="致谢",command=thanks)
+    menu.add_cascade(label="关于",command=info)
 
-#l for Label e for Entry b for Button c for Combobox p for PhotoImage
-l_filepath = Label(tk, text="文件位置")
-e_filepath = Entry(tk,state="readonly",textvariable=show_path)
-p_buttonimage = PhotoImage(file="file-72-16.png")
-b_selectfile = Button(tk,command=select_files,image=p_buttonimage)
-windnd.hook_dropfiles(tk, func=drag_files)
-l_fusiontype = Label(tk, text="文件类型")
-c_choose_fusiontype = ttk.Combobox(tk, values=(
-    "Effects", "Generators", "Titles", "Transitions"),state="readonly")
-c_choose_fusiontype.current(0)
-l_customdir = Label(tk,text="自定义目录")
-e_get_customdir = Entry(tk)
-b_run = Button(tk, text="打包/解包", command=run)
+    #l for Label e for Entry b for Button c for Combobox p for PhotoImage
+    l_filepath = Label(tk, text="文件位置")
+    e_filepath = Entry(tk,state="readonly",textvariable=show_path)
+    p_buttonimage = PhotoImage(file="file-72-16.png")
+    b_selectfile = Button(tk,command=select_files,image=p_buttonimage)
+    windnd.hook_dropfiles(tk, func=drag_files)
+    l_fusiontype = Label(tk, text="文件类型")
+    c_choose_fusiontype = ttk.Combobox(tk, values=(
+        "Effects", "Generators", "Titles", "Transitions"),state="readonly")
+    c_choose_fusiontype.current(0)
+    l_customdir = Label(tk,text="自定义目录")
+    e_get_customdir = Entry(tk)
+    b_run = Button(tk, text="打包/解包", command=run)
 
-l_filepath.grid(row=0,column=0,padx=5,pady=3,sticky="nw")
-e_filepath.grid(row=0,column=1,columnspan=10,padx=5,pady=3,sticky="nw")
-b_selectfile.grid(row=0,column=2,padx=5,pady=3)
-l_fusiontype.grid(row=1,column=0,padx=5,pady=3,sticky="nw")
-c_choose_fusiontype.grid(row=1,column=1,padx=5,pady=3,sticky="nw")
-l_customdir.grid(row=2,column=0,padx=5,pady=3,sticky="nw")
-e_get_customdir.grid(row=2,column=1,padx=5,pady=3,sticky="nw")
-b_run.grid(row=3,columnspan=3,sticky="n")
-tk.mainloop()
+    l_filepath.grid(row=0,column=0,padx=5,pady=3,sticky="nw")
+    e_filepath.grid(row=0,column=1,columnspan=10,padx=5,pady=3,sticky="nw")
+    b_selectfile.grid(row=0,column=2,padx=5,pady=3)
+    l_fusiontype.grid(row=1,column=0,padx=5,pady=3,sticky="nw")
+    c_choose_fusiontype.grid(row=1,column=1,padx=5,pady=3,sticky="nw")
+    l_customdir.grid(row=2,column=0,padx=5,pady=3,sticky="nw")
+    e_get_customdir.grid(row=2,column=1,padx=5,pady=3,sticky="nw")
+    b_run.grid(row=3,columnspan=3,sticky="n")
+    tk.mainloop()
